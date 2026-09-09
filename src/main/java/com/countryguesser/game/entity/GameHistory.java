@@ -1,9 +1,11 @@
 package com.countryguesser.game.entity;
 
+import com.countryguesser.game.entity.enums.EndedReason;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -25,9 +27,11 @@ public class GameHistory {
     @Column(nullable = false)
     private Integer streak;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "ended_reason", nullable = false, length = 20)
-    private String endedReason;
+    private EndedReason endedReason;
 
+    @CreationTimestamp
     @Column(name = "played_at", nullable = false, updatable = false)
-    private LocalDateTime playedAt = LocalDateTime.now();
+    private LocalDateTime playedAt;
 }
