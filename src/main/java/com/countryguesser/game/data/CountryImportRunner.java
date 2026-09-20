@@ -2,6 +2,7 @@ package com.countryguesser.game.data;
 
 import com.countryguesser.game.entity.Country;
 import com.countryguesser.game.repository.CountryRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Geometry;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -36,8 +38,25 @@ public class CountryImportRunner implements CommandLineRunner {
             "France", "FR",
             "Norway", "NO"
     );
+    private static final Set<String> COVERAGE_COUNTRY_CODES = Set.of(
+            // Europe
+            "GB","IE","FR","DE","NL","BE","LU","CH","AT","ES","PT","IT",
+            "DK","SE","NO","FI","IS","PL","CZ","SK","HU","RO","BG","GR",
+            "HR","SI","EE","LV","LT","AD",
+            // North America
+            "US","CA","MX",
+            // South America
+            "BR","AR","CL","UY","PE","CO","EC",
+            // Oceania
+            "AU","NZ",
+            // Asia
+            "JP","SG","TH","MY","IL","KR","ID","IN","TR",
+            // Africa
+            "ZA","BW","LS","NA","GH","KE","RW","UG"
+    );
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         long existingCount = countryRepository.count();
         if (existingCount > 0) {
@@ -89,6 +108,9 @@ public class CountryImportRunner implements CommandLineRunner {
         }
 
         countryRepository.saveAll(countries);
+        countryRepository.flush();
+        countryRepository.recalculateAreaWeights();
+        countryRepository.markCoverage(COVERAGE_COUNTRY_CODES);
         log.info("Imported {} countries ({} skipped due to missing ISO code).", countries.size(), skipped);
     }
 
