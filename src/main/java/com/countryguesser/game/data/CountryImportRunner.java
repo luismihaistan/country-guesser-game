@@ -2,6 +2,7 @@ package com.countryguesser.game.data;
 
 import com.countryguesser.game.entity.Country;
 import com.countryguesser.game.repository.CountryRepository;
+import com.countryguesser.game.repository.PrecalculatedPointRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.wololo.geojson.FeatureCollection;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -31,8 +33,9 @@ public class CountryImportRunner implements CommandLineRunner {
 
     private static final int WGS84_SRID = 4326;
     private static final String GEOJSON_PATH = "data/countries.geojson";
-
+    private static final int POINTS_PER_COUNTRY = 150;
     private final CountryRepository countryRepository;
+    private final PrecalculatedPointRepository precalculatedPointRepository;
     private final GeoJSONReader geoJsonReader = new GeoJSONReader();
     private static final Map<String, String> ISO_CODE_OVERRIDES = Map.of(
             "France", "FR",
@@ -58,6 +61,11 @@ public class CountryImportRunner implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        importCountriesIfNeeded();
+        generatePointsIfNeeded();
+    }
+
+    private void importCountriesIfNeeded() throws IOException {
         long existingCount = countryRepository.count();
         if (existingCount > 0) {
             log.info("Countries already imported ({} rows) — skipping import.", existingCount);
@@ -112,6 +120,18 @@ public class CountryImportRunner implements CommandLineRunner {
         countryRepository.recalculateAreaWeights();
         countryRepository.markCoverage(COVERAGE_COUNTRY_CODES);
         log.info("Imported {} countries ({} skipped due to missing ISO code).", countries.size(), skipped);
+    }
+
+    private void generatePointsIfNeeded() {
+        long existingPoints = precalculatedPointRepository.count();
+        if (existingPoints > 0) {
+            log.info("Precalculated points already exist ({} rows) — skipping generation.", existingPoints);
+            return;
+        }
+
+        log.info("Generating {} points per covered country...", POINTS_PER_COUNTRY);
+        precalculatedPointRepository.generatePoints(POINTS_PER_COUNTRY);
+        log.info("Generated {} precalculated points total.", precalculatedPointRepository.count());
     }
 
     private MultiPolygon toMultiPolygon(Geometry geometry) {
