@@ -6,14 +6,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Repository
 public interface PrecalculatedPointRepository extends JpaRepository<PrecalculatedPoint, Long> {
-
-    @Query(value = "SELECT * FROM precalculated_points WHERE used = false ORDER BY random() LIMIT 1", nativeQuery = true)
-    Optional<PrecalculatedPoint> findRandomPoint();
 
     @Query(value = "SELECT COUNT(*) FROM precalculated_points WHERE country_code = :countryCode AND used = false", nativeQuery = true)
     long countUnusedByCountry(@Param("countryCode") String countryCode);
@@ -41,4 +39,17 @@ public interface PrecalculatedPointRepository extends JpaRepository<Precalculate
         WHERE c.iso_code = :countryCode
         """, nativeQuery = true)
     void generatePointsForCountry(@Param("countryCode") String countryCode, @Param("count") int count);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE precalculated_points SET used = true WHERE id = :id", nativeQuery = true)
+    void markAsUsed(@Param("id") Long id);
+
+    @Query(value = """
+    SELECT id, country_code AS countryCode, lat, lng
+    FROM precalculated_points
+    WHERE used = false
+    ORDER BY random() LIMIT 1
+    """, nativeQuery = true)
+    Optional<RandomPointProjection> findRandomPoint();
 }
