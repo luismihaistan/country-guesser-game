@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Which country is this?</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<main id="auth-view" class="auth" hidden>
+    <h1 class="title">Which country is this?</h1>
+    <p class="lede">You get one street-level photo and ten minutes to name the country. Every correct answer extends your streak.</p>
+
+    <form id="auth-form">
+        <p id="auth-error" class="error" role="alert" hidden></p>
+
+        <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="email" required>
+        </label>
+
+        <label class="field">
+            <span>Password</span>
+            <input type="password" name="password" autocomplete="current-password" required>
+            <small id="password-hint" hidden>At least 8 characters.</small>
+        </label>
+
+        <button id="auth-submit" class="primary" type="submit">Sign in</button>
+    </form>
+
+    <p class="switch">
+        <span id="auth-switch-text">New here?</span>
+        <button id="auth-switch" class="link" type="button">Create an account</button>
+    </p>
+</main>
+
+<div id="game-view" hidden>
+    <header class="bar">
+        <span id="who"></span>
+        <button id="logout" class="link" type="button">Sign out</button>
+    </header>
+    <p class="placeholder">You're in. The panorama arrives in the next step.</p>
+</div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

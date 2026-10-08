@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/game")
 @RequiredArgsConstructor
@@ -19,12 +21,21 @@ public class GameController {
         StartRoundResult result = gameService.startRound(userId);
 
         return switch (result.status()) {
-            case STARTED -> ResponseEntity.ok(new NextResponse(result.panoId()));
+            case STARTED -> ResponseEntity.ok(result.round());
             case ALREADY_ACTIVE -> ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("You already have an active round.");
             case POOL_EMPTY -> ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body("No locations available right now, try again shortly.");
         };
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<?> current(@AuthenticationPrincipal Long userId) {
+        Optional<RoundResponse> round = gameService.getCurrentRound(userId);
+        if (round.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(round.get());
     }
 
     @PostMapping("/guess")

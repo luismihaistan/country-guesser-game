@@ -39,7 +39,9 @@ public class GameService {
 
         sessionService.startRound(userId, location.panoId(), location.countryCode(), pendingStreak);
 
-        return new StartRoundResult(StartRoundResult.Status.STARTED, location.panoId());
+        RoundResponse round = new RoundResponse(
+                location.panoId(), pendingStreak, sessionService.getRemainingSeconds(userId));
+        return new StartRoundResult(StartRoundResult.Status.STARTED, round);
     }
 
     @Transactional
@@ -63,6 +65,12 @@ public class GameService {
         sessionService.clearSession(userId);
 
         return new GuessResult(GuessResult.Status.INCORRECT, false, finalStreak, session.countryCode());
+    }
+
+    public Optional<RoundResponse> getCurrentRound(Long userId) {
+        return sessionService.getActiveRound(userId)
+                .map(s -> new RoundResponse(
+                        s.panoId(), s.streak(), sessionService.getRemainingSeconds(userId)));
     }
 
     private void persistGameEnd(Long userId, int streak) {

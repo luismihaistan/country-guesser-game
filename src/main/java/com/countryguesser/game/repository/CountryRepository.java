@@ -24,6 +24,19 @@ public interface CountryRepository extends JpaRepository<Country, String> {
     void markCoverage(@Param("codes") Collection<String> codes);
 
     @Query(value = """
+    SELECT CAST(json_build_object(
+        'type', 'FeatureCollection',
+        'features', COALESCE(json_agg(json_build_object(
+            'type', 'Feature',
+            'properties', json_build_object('iso', iso_code, 'name', name),
+            'geometry', CAST(ST_AsGeoJSON(ST_SimplifyPreserveTopology(geom, 0.03), 4) AS json)
+        )), CAST('[]' AS json))
+    ) AS text)
+    FROM countries
+    """, nativeQuery = true)
+    String findAllAsSimplifiedGeoJson();
+
+    @Query(value = """
     SELECT EXISTS(
         SELECT 1 FROM countries
         WHERE iso_code = :isoCode

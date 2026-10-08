@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +51,11 @@ public class SessionService {
     public int getPendingStreak(Long userId) {
         Object streak = redisTemplate.opsForHash().get(SESSION_KEY_PREFIX + userId, "streak");
         return streak != null ? Integer.parseInt((String) streak) : 0;
+    }
+
+    public long getRemainingSeconds(Long userId) {
+        Long ttl = redisTemplate.getExpire(SESSION_KEY_PREFIX + userId, TimeUnit.SECONDS);
+        return (ttl != null && ttl > 0) ? ttl : 0;
     }
 
     public void markCorrectGuess(Long userId, int newStreak) {
