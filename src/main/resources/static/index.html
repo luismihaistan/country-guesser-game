@@ -35,12 +35,21 @@
     </p>
 </main>
 
-<div id="game-view" hidden>
+<div id="game-view" class="game" hidden>
     <header class="bar">
         <span id="who"></span>
+        <span class="streak">Streak <strong id="streak">0</strong></span>
         <button id="logout" class="link" type="button">Sign out</button>
     </header>
-    <p class="placeholder">You're in. The panorama arrives in the next step.</p>
+
+    <div class="stage">
+        <div id="pano" class="pano" aria-label="Street View panorama"></div>
+
+        <div id="start-panel" class="start-panel" hidden>
+            <p id="start-message">Ready when you are.</p>
+            <button id="start-btn" class="primary" type="button">Get a location</button>
+        </div>
+    </div>
 </div>
 
 <script type="module" src="/js/app.js"></script>

@@ -1,4 +1,5 @@
 import { request, session } from './api.js';
+import { startGame } from './game.js';
 
 const authView = document.querySelector('#auth-view');
 const gameView = document.querySelector('#game-view');
@@ -66,6 +67,7 @@ function enterGame() {
     who.textContent = session.email ?? '';
     form.reset();
     showView('game');
+    startGame(); // after showView: the panorama needs a visible, sized container
 }
 
 form.addEventListener('submit', async (event) => {

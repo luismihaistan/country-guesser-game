@@ -120,7 +120,15 @@ body {
 
 /* ---------- game shell (filled in next steps) ---------- */
 
+.game {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+}
+
 .bar {
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -130,6 +138,35 @@ body {
     border-bottom: 1px solid var(--line);
 }
 
-.placeholder {
-    padding: 2rem 1.25rem;
+.streak { color: var(--ink-soft); }
+.streak strong { color: var(--ink); font-size: 1.25rem; }
+
+.stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    background: var(--ink);
+}
+
+.pano {
+    position: absolute;
+    inset: 0;
+}
+
+.start-panel {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    text-align: center;
+    color: var(--paper);
+    background: rgba(18, 48, 63, 0.82);
+}
+
+.start-panel p {
+    margin: 0;
+    font-size: 1.25rem;
 }
