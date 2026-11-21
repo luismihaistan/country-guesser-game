@@ -63,11 +63,11 @@ async function login(email, password) {
     session.save(token, email);
 }
 
-function enterGame() {
+function enterGame(currentRound) {
     who.textContent = session.email ?? '';
     form.reset();
     showView('game');
-    startGame(); // after showView: the panorama needs a visible, sized container
+    startGame(currentRound); // after showView: the panorama needs a visible, sized container
 }
 
 form.addEventListener('submit', async (event) => {
@@ -108,15 +108,16 @@ async function init() {
         showView('auth');
         return;
     }
+    let current;
     try {
-        // Harmless read; a 401/403 clears the stale token and fires 'session-expired'.
-        await request('/api/game/current');
+        // Doubles as the token check: a 401/403 clears the stale token and fires 'session-expired'.
+        current = await request('/api/game/current');
     } catch {
         showView('auth');
         showError('Cannot reach the server.');
         return;
     }
-    if (session.token) enterGame();
+    if (session.token) enterGame(current);
 }
 
 init();

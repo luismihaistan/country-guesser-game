@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Which country is this?</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌍%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -45,6 +47,11 @@
     <div class="stage">
         <div id="pano" class="pano" aria-label="Street View panorama"></div>
 
+        <div id="guess-panel" class="guess-panel" hidden>
+            <div id="map" class="map" aria-label="Country map"></div>
+            <button id="guess-btn" class="primary" type="button" disabled>Pick a country</button>
+        </div>
+
         <div id="start-panel" class="start-panel" hidden>
             <p id="start-message">Ready when you are.</p>
             <button id="start-btn" class="primary" type="button">Get a location</button>
@@ -52,6 +59,7 @@
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="/js/app.js"></script>
 </body>
 </html>

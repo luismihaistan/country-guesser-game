@@ -27,6 +27,10 @@ public class StreetViewClient {
         this.radiusMeters = radiusMeters;
     }
 
+    public boolean isOfficialImagery(StreetViewMetadataResponse response) {
+        return response.copyright() != null && response.copyright().contains("Google");
+    }
+
     public Optional<StreetViewMetadataResponse> fetchMetadata(double lat, double lng) {
         try {
             StreetViewMetadataResponse response = restClient.get()

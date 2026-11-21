@@ -62,6 +62,9 @@ public class LocationGeneratorWorker {
             }
 
             StreetViewMetadataResponse response = responseOpt.get();
+            if (!streetViewClient.isOfficialImagery(response)) {
+                return; // user-contributed photo sphere, not Street View car imagery
+            }
             double realLat = response.location().lat();
             double realLng = response.location().lng();
 

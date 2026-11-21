@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record StreetViewMetadataResponse(
         String status,
         @JsonProperty("pano_id") String panoId,
+        String copyright,
         Location location
 ) {
     public record Location(double lat, double lng) {}

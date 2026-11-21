@@ -22,7 +22,7 @@ async function doLoad() {
         window.__mapsReady = resolve;
         const script = document.createElement('script');
         script.src = 'https://maps.googleapis.com/maps/api/js'
-            + `?key=${encodeURIComponent(mapsApiKey)}&callback=__mapsReady&v=weekly`;
+            + `?key=${encodeURIComponent(mapsApiKey)}&loading=async&callback=__mapsReady&v=weekly`;
         script.async = true;
         script.onerror = () => reject(new Error('Could not load Google Maps.'));
         document.head.append(script);
