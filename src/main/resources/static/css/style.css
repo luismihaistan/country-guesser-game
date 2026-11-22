@@ -138,8 +138,31 @@ body {
     border-bottom: 1px solid var(--line);
 }
 
+.hud {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
 .streak { color: var(--ink-soft); }
 .streak strong { color: var(--ink); font-size: 1.25rem; }
+
+.timer {
+    padding: 0.1rem 0.55rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background: var(--chart);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+}
+
+.timer.urgent {
+    color: var(--error);
+    background: #fbeae7;
+    border-color: var(--error);
+}
 
 .stage {
     position: relative;
@@ -151,11 +174,13 @@ body {
 .pano {
     position: absolute;
     inset: 0;
+    z-index: 0;
 }
 
 .start-panel {
     position: absolute;
     inset: 0;
+    z-index: 10;
     display: grid;
     place-content: center;
     justify-items: center;

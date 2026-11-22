@@ -4,6 +4,7 @@ import { initMap, clearSelection, countryName } from './map.js';
 
 const panoEl = document.querySelector('#pano');
 const streakEl = document.querySelector('#streak');
+const timerEl = document.querySelector('#timer');
 const startPanel = document.querySelector('#start-panel');
 const startMessage = document.querySelector('#start-message');
 const startBtn = document.querySelector('#start-btn');
@@ -14,13 +15,108 @@ const guessBtn = document.querySelector('#guess-btn');
 // Created once and reused with setPano(): Dynamic Street View is billed per instantiation.
 let panorama = null;
 let selected = null; // { iso, name } or null
+let timerId = null;
+let roundDeadlineMs = 0;
+let currentRoundStreak = 0;
+let timeoutInFlight = false;
 
 // Google calls this global when it rejects the key (wrong referrer, API not enabled...).
 window.gm_authFailure = () =>
     showStart('Google rejected the browser key. Check its referrer and API restrictions.');
 
+function formatTime(totalSeconds) {
+    const clamped = Math.max(0, Math.ceil(totalSeconds));
+    const minutes = Math.floor(clamped / 60);
+    const seconds = clamped % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function stopTimer({ hide = true } = {}) {
+    if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+    }
+    roundDeadlineMs = 0;
+    if (hide) {
+        timerEl.hidden = true;
+        timerEl.classList.remove('urgent');
+    }
+}
+
+function renderTimer(remainingSeconds) {
+    timerEl.textContent = formatTime(remainingSeconds);
+    timerEl.classList.toggle('urgent', remainingSeconds <= 60);
+    timerEl.hidden = false;
+}
+
+function startTimer(secondsRemaining) {
+    stopTimer({ hide: false });
+    const initial = Math.max(0, Math.ceil(secondsRemaining));
+    roundDeadlineMs = Date.now() + initial * 1000;
+    renderTimer(initial);
+
+    if (initial <= 0) {
+        handleTimeout();
+        return;
+    }
+    timerId = setInterval(tickTimer, 250);
+}
+
+function tickTimer() {
+    if (!roundDeadlineMs) return;
+    const remaining = Math.max(0, Math.ceil((roundDeadlineMs - Date.now()) / 1000));
+    renderTimer(remaining);
+    if (remaining <= 0) {
+        handleTimeout();
+    }
+}
+
+async function handleTimeout() {
+    if (timeoutInFlight) return;
+    timeoutInFlight = true;
+    stopTimer({ hide: false });
+    guessBtn.disabled = true;
+    guessPanel.hidden = true;
+
+    try {
+        const response = await request('/api/game/timeout', { method: 'POST' });
+        if (!response.ok) {
+            streakEl.textContent = '0';
+            showStart("Time's up! Your streak has ended.", 'Play again');
+            return;
+        }
+
+        const result = await response.json();
+        if (!result.expired && result.secondsRemaining > 0) {
+            guessPanel.hidden = false;
+            updateGuessButton();
+            startTimer(result.secondsRemaining);
+            return;
+        }
+
+        const endedStreak = result.streak ?? currentRoundStreak;
+        streakEl.textContent = '0';
+        const message = result.actualCountryCode
+            ? `Time's up! It was ${countryName(result.actualCountryCode)}. Your streak ended at ${endedStreak}.`
+            : `Time's up! Your streak ended at ${endedStreak}.`;
+        showStart(message, 'Play again');
+    } catch {
+        streakEl.textContent = '0';
+        showStart("Time's up! Your streak has ended.", 'Play again');
+    } finally {
+        timeoutInFlight = false;
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && timerId !== null) {
+        tickTimer();
+    }
+});
+
 /** The overlay is used for the start screen, the result screen and errors. */
 function showStart(message, buttonLabel = 'Get a location') {
+    stopTimer();
     startMessage.textContent = message;
     startBtn.textContent = buttonLabel;
     startBtn.disabled = false;
@@ -39,6 +135,7 @@ function onCountrySelected(iso, name) {
 }
 
 async function showRound(round) {
+    const receivedAt = Date.now();
     await loadMaps();
 
     if (!panorama) {
@@ -56,8 +153,10 @@ async function showRound(round) {
         panorama.setPano(round.panoId);
         panorama.setPov({ heading: 0, pitch: 0 });
         panorama.setVisible(true);
+        google.maps.event.trigger(panorama, 'resize');
     }
 
+    currentRoundStreak = round.streak;
     streakEl.textContent = round.streak;
     startPanel.hidden = true;
 
@@ -66,6 +165,8 @@ async function showRound(round) {
     guessPanel.hidden = false; // the map container must be visible before it is built
     await initMap(mapEl, onCountrySelected);
     clearSelection();
+    const elapsedSeconds = (Date.now() - receivedAt) / 1000;
+    startTimer(Math.max(0, round.secondsRemaining - elapsedSeconds));
 }
 
 function showResult(result) {
@@ -111,6 +212,7 @@ startBtn.addEventListener('click', async () => {
 
 guessBtn.addEventListener('click', async () => {
     if (!selected) return;
+    stopTimer({ hide: false });
     guessBtn.disabled = true;
     try {
         const response = await request('/api/game/guess', {
@@ -118,7 +220,8 @@ guessBtn.addEventListener('click', async () => {
             body: { countryCode: selected.iso },
         });
         if (response.status === 410) {
-            showStart('That round is over. Start a new one.');
+            streakEl.textContent = '0';
+            showStart("Time's up! Your streak has ended.", 'Play again');
             return;
         }
         if (!response.ok) throw new Error('Could not submit the guess.');
@@ -129,8 +232,14 @@ guessBtn.addEventListener('click', async () => {
     }
 });
 
+export function stopGame() {
+    stopTimer();
+    panorama?.setVisible(false);
+}
+
 /** Called when the game view opens: resume a running round or offer to start one. */
 export async function startGame(prefetched) {
+    stopTimer();
     panorama?.setVisible(false);
     streakEl.textContent = '0';
     startPanel.hidden = true;

@@ -1,5 +1,5 @@
 import { request, session } from './api.js';
-import { startGame } from './game.js';
+import { startGame, stopGame } from './game.js';
 
 const authView = document.querySelector('#auth-view');
 const gameView = document.querySelector('#game-view');
@@ -91,12 +91,14 @@ form.addEventListener('submit', async (event) => {
 switchBtn.addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
 
 logoutBtn.addEventListener('click', () => {
+    stopGame();
     session.clear();
     setMode('login');
     showView('auth');
 });
 
 window.addEventListener('session-expired', () => {
+    stopGame();
     setMode('login');
     showView('auth');
     showError('Your session ended. Sign in again.');

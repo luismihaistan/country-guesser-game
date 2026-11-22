@@ -40,7 +40,10 @@
 <div id="game-view" class="game" hidden>
     <header class="bar">
         <span id="who"></span>
-        <span class="streak">Streak <strong id="streak">0</strong></span>
+        <div class="hud">
+            <span class="streak">Streak <strong id="streak">0</strong></span>
+            <span id="timer" class="timer" aria-label="Time remaining" hidden>10:00</span>
+        </div>
         <button id="logout" class="link" type="button">Sign out</button>
     </header>
 

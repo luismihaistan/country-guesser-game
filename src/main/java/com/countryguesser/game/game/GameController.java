@@ -1,5 +1,6 @@
 package com.countryguesser.game.game;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,7 @@ public class GameController {
     @PostMapping("/guess")
     public ResponseEntity<?> guess(
             @AuthenticationPrincipal Long userId,
-            @RequestBody GuessRequest request
+            @Valid @RequestBody GuessRequest request
     ) {
         GuessResult result = gameService.submitGuess(userId, request.countryCode());
 
@@ -53,7 +54,11 @@ public class GameController {
         };
     }
 
-    public record NextResponse(String panoId) {}
+    @PostMapping("/timeout")
+    public ResponseEntity<TimeoutResult> timeout(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(gameService.checkTimeout(userId));
+    }
+
     public record GuessRequest(@NotBlank String countryCode) {}
     public record GuessResponse(boolean correct, int streak, String actualCountryCode) {}
 }
